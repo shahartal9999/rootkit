@@ -2,9 +2,9 @@
 PROGRAM			:= colman
 
 # Build
-MODULEDOR 		:= /lib/moudles/$(shell uname -r)
-BUILDDIR		:= $(MODULEDOR)/build
-BUILDDIR		:= $(MODULEDOR)/kernel
+MODULEDIR 		:= /lib/modules/$(shell uname -r)
+BUILDDIR		:= $(MODULEDIR)/build
+KERNELDIR		:= $(MODULEDIR)/kernel
 
 # Src files
 SRCS_S 			:= src
@@ -29,15 +29,12 @@ $(PROGRAM)-y	+= src/plugins/hidder.o
 $(PROGRAM)-y	+= src/plugins/cnc.o
 
 
-
 ccflags-y 		:= -I$(SRCS_H) -I$(INCL_H) -I$(PLUGINS_H)
 
 
 all:
-	$(MAKE) -C $(BUILDDIR) M=$(PWD) moudles
+	$(MAKE) -C $(BUILDDIR) M=$(PWD) modules
 
 
 clean:
 	$(MAKE) -C $(BUILDDIR) M=$(PWD) clean
-
-	 
