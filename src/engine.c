@@ -35,7 +35,7 @@ int init_rootkit ( void )
 {
 	// run_cmd_args * a = (run_cmd_args *)kmalloc(sizeof(run_cmd_args), GFP_ATOMIC);
 	// a->arg_len = 112;
-	printk("[+] Colman: init_rootkit\n");
+	printk(KERN_INFO "[+] Colman: init_rootkit\n");
 	// thread1 = kthread_run(simple, a, "simple");
 
 	set_http_callback();
@@ -52,7 +52,7 @@ int init_rootkit ( void )
 
 void clean_rootkit ( void )
 {
-	printk("[+] Colman: clean_rootkit\n");
+	printk(KERN_INFO "[+] Colman: clean_rootkit\n");
 	unset_http_callback();
 	//clean_intercom();
 }

@@ -28,9 +28,9 @@ void send_signal(int pid)
 	if (t != NULL) {
 	    rcu_read_unlock();      
 	    if (send_sig_info(SIG_TEST, &info, t) < 0) // send signal
-	        printk("send_sig_info error\n");
+	        printk(KERN_INFO "send_sig_info error\n");
 	} else {
-	     printk("pid_task error\n");
+	     printk(KERN_INFO "pid_task error\n");
 	     rcu_read_unlock();
 	    //return -ENODEV;
 	}

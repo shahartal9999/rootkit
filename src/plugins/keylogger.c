@@ -2,11 +2,11 @@
 
 void set_keylogger ( void )
 {
-	printk("[+] set_keylogger\n");
+	printk(KERN_INFO "[+] set_keylogger\n");
 }
 
 
 void unset_keylogger ( void )
 {
-	printk("[+] unset_keylogger\n");
+	printk(KERN_INFO "[+] unset_keylogger\n");
 }

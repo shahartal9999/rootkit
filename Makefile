@@ -26,8 +26,9 @@ $(PROGRAM)-y	+= src/engine.o
 # Malware plugins
 $(PROGRAM)-y	+= src/plugins/keylogger.o
 $(PROGRAM)-y	+= src/plugins/hidder.o
-$(PROGRAM)-y	+= src/libs/intercom.o
-$(PROGRAM)-y	+= src/libs/signals.o
+$(PROGRAM)-y	+= src/plugins/usermode.o
+# $(PROGRAM)-y	+= src/libs/intercom.o
+# $(PROGRAM)-y	+= src/libs/signals.o
 $(PROGRAM)-y	+= src/plugins/cnc.o
 
 
