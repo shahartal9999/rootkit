@@ -22,6 +22,9 @@
 *.la
 *.lo
 
+# Python stuff
+*.pyc
+
 # Shared objects (inc. Windows DLLs)
 *.dll
 *.so
@@ -50,3 +53,5 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+*output*
+*log*
