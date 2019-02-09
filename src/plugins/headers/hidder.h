@@ -4,7 +4,6 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 
-void set_dkom_lkm ( void );
-void unset_dkom_lkm ( void );
+int switch_dkom_lkm( void );
 
 #endif

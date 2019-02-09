@@ -1,10 +1,6 @@
-#ifndef CREDIT_H
-#define CREDIT_H
+#ifndef ENGINE_H
+#define ENGINE_H
 
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Shahar Tal & Tomer Adi");
-MODULE_DESCRIPTION("Colman rootkit");
-
-void clean_rootkit ( void );
+int quiter_thread (void * is_busy);
 
 #endif
