@@ -7,4 +7,3 @@ lkm rootkit for the newest kernel
 TODO:
   * Auto stripper in the Makefile
   * Kill option
-  * Finish keylogger
