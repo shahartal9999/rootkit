@@ -7,11 +7,12 @@
 #include <asm/uaccess.h>
 #include <linux/buffer_head.h>
 #include <linux/string.h>
+#include "debug_helper.h"
 
 loff_t log_offset;
 
 /* Opens a file from kernel space. */
-struct file* kfile_open(const char *path, int flags, int rights)
+struct file * kfile_open(const char *path, int flags, int rights)
 {
 	struct file *fp = NULL;
 	mm_segment_t old_fs;
@@ -30,8 +31,8 @@ struct file* kfile_open(const char *path, int flags, int rights)
 	if(IS_ERR(fp)){
 		/* Debugging... */
 		error = PTR_ERR(fp);
-		printk("[-] Colman: log_open(): ERROR = %d", error);
-		return NULL;
+		dbg_err_print("log_open(): ERROR = %d.", error);
+		return fp;
 	}
 
 	return fp;

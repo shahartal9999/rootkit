@@ -6,43 +6,45 @@
 #include <linux/sched/signal.h>
 #endif
 #include "usermode.h"
+#include "debug_helper.h"
 
-int run_usermode_cmd(char * cmd);
+int run_usermode_cmd(void * arguments);
 
 int run_usermode_cmd_thread( void * arguments)
 {
     run_cmd_args * args = (run_cmd_args*)arguments;
-    printk(KERN_INFO "[+] Colman: Init thread.\n");
+    dbg_print("Init thread.");
     while (!kthread_should_stop())
     {
         if (args)
         {
-            printk(KERN_INFO "[+] Colman: Simple thread\n");
+            dbg_print("Simple thread.");
             if (args->arg)
             {
                 if (run_usermode_cmd(args->arg) != 0)
                 {
-                    printk(KERN_INFO "[-] Colman: Somthing with the usermode_cmd went wrong.\n");
+                    dbg_err_print("Somthing with the usermode_cmd went wrong.");
                 }
             }
             else
             {
-                printk(KERN_INFO "[-] Colman: The args are not full.\n");
+                dbg_err_print("The args are not full.");
             }
         }
         else
         {
-            printk(KERN_INFO "[-] Colman: The args are not full.\n");
+            dbg_err_print("The args are not full.");
         }
-        printk(KERN_INFO "[+] Colman: run_usermode_cmd().\n");
+        dbg_print("run_usermode_cmd().");
         set_current_state(TASK_INTERRUPTIBLE);
         schedule();
     }
-    printk(KERN_INFO "[+] Colman: Close thread.\n");
+    dbg_print("Close thread.");
     do_exit(0);
 }
 
-int run_usermode_cmd(char * cmd) {
+int run_usermode_cmd(void * arguments) {
+    char * cmd = (char *) arguments;
     struct subprocess_info *sub_info;
     char * argv[] = { "/bin/sh", "-c", cmd , NULL };
     static char *envp[] = {
@@ -52,11 +54,11 @@ int run_usermode_cmd(char * cmd) {
  
     if (cmd == NULL)
     {
-        printk(KERN_INFO "[-] Colman: Failed to pass arguments.");
+        dbg_err_print("Failed to pass arguments.");
         goto exit_with_error;
     }
 
-    printk(KERN_INFO "[+] Colman: command: %s.\n", cmd);
+    dbg_print("command: %s.", cmd);
     sub_info = call_usermodehelper_setup( argv[0], argv, envp, GFP_ATOMIC, NULL,NULL,NULL );    
     if (!sub_info)
         goto exit_with_error;

