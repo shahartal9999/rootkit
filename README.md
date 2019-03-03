@@ -3,7 +3,7 @@ The Bla-rootkit is an a advance malware written in c that supposed to be install
 normal protocol of the server.
 
 
-![alt text](https://i.imgur.com/KOdSjwL.jpg)
+![alt text](https://i.imgur.com/hhFu38m.jpg)
 
 <br><br>
 
