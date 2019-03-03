@@ -42,7 +42,7 @@ The rootkit tested only on **Ubuntu 18.04.1 LTS - amd64** for now.<br><br>
 **HD DATA**: In the normal mode (without persistence) <br>
 **Logs**: 
 - via the dmesg we can see that the sign verification leave a mark
-- For sure there more logs but we need to check it yet.
+- For sure there more logs but we need to check it yet.<br>
 **Files**: In the current version we left 2 files: output file (result of usermode command) and the keylogger file.<br>
 **History**: hide the usermode command from history.<br><br>
 
