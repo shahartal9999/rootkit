@@ -5,36 +5,35 @@ normal protocol of the server.
 
 ![alt text](https://i.imgur.com/KOdSjwL.jpg)
 
-<br><br><br><br><br>
-<br><br><br><br><br>
+<br><br>
 
 ### Modules
 Our malware have 3 parts.
 
 1. The launcher
-The usermode elf that run the malware
+The usermode elf that run the malware<br><br>
 
 2. Kernel-mode client 
-Hold the main functionality and recv the commands from the c&c by Man-in-the-middle technique between the main servcie of the server and the c&c.
+Hold the main functionality and recv the commands from the c&c by Man-in-the-middle technique between the main servcie of the server and the c&c.<br><br>
 
 3. Command and Control Server (Python)
-Send commands for the rootkit client 
+Send commands for the rootkit client.<br><br> 
 
 ### Version 0.1 Features
-//with high ability of network communication & host hidding.
-//The rootkit tested only on **Ubuntu 18.04.1 LTS - amd64** for now.
+//with high ability of network communication & host hidding.<br>
+//The rootkit tested only on **Ubuntu 18.04.1 LTS - amd64** for now.<br><br>
 
 ## Rootkit launcher
-Hold the binary data of the lkm client as a buffer and use init_module syscall for loading the ko to the kernel. 
+Hold the binary data of the lkm client as a buffer and use init_module syscall for loading the ko to the kernel.<br>
 After the kernel module is got loaded is job is to delete himself.
 
 ## Rootkit client
-LKM rootkit with high ability of network communication & host hidding.
-The rootkit tested only on **Ubuntu 18.04.1 LTS - amd64** for now.
+LKM rootkit with high ability of network communication & host hidding.<br>
+The rootkit tested only on **Ubuntu 18.04.1 LTS - amd64** for now.<br><br>
 
 ### Current Features
-- Keylogger
-- Run usermode command
+- Keylogger<br>
+- Run usermode command<br><br>
 
 
 ### Evidence we left
@@ -43,19 +42,19 @@ The rootkit tested only on **Ubuntu 18.04.1 LTS - amd64** for now.
 **Logs**: 
 1. via the dmesg we can see that the sign verification leave a mark
 2. 4Shure their more logs, but we need to check if out
-**Files**: In the current version we left 2 files: output file (result of usermode command) and the keylogger file.
-**History**: hide the usermode command from history.
+**Files**: In the current version we left 2 files: output file (result of usermode command) and the keylogger file.<br>
+**History**: hide the usermode command from history.<br><br>
 
 ### Future Features
-- Persistence mode (without deleting the runner for start)
-- Find another way to send a big reault (can be done by split the data to few parts and let the server know to expect more data).
-- Use vulnerabilities for getting from a simple user to the kernel or to a root Permissions.  
-- Self kill
-- Make the communaction module more flexable.
+- Persistence mode (without deleting the runner for start).<br>
+- Find another way to send a big reault (can be done by split the data to few parts and let the server know to expect more data).<br>
+- Use vulnerabilities for getting from a simple user to the kernel or to a root Permissions.<br>
+- Self kill.<br>
+- Make the communaction module more flexable.<br><br>
 
 ## Buildchain
-
+<br><br>
 ### Future Features
-- Auto stripper in the Makefile.
+- Auto stripper in the Makefile.<br><br>
 
 
