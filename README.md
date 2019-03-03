@@ -24,11 +24,14 @@ The rootkit tested only on **Ubuntu 18.04.1 LTS - amd64** for now.<br><br>
 
 ## Rootkit launcher
 Hold the binary data of the lkm client as a buffer and use init_module syscall for loading the ko to the kernel.<br>
-After the kernel module is got loaded is job is to delete himself.
+After the kernel module is got loaded is job is to delete himself.<br>
+Source location: usermode_runner.c<br><br>
 
 ## Rootkit client
 LKM rootkit with high ability of network communication & host hidding.<br>
-The rootkit tested only on **Ubuntu 18.04.1 LTS - amd64** for now.<br><br>
+The rootkit tested only on **Ubuntu 18.04.1 LTS - amd64** for now.<br>
+
+Source location: "src" folder<br><br>
 
 ### Current Features
 - Keylogger.<br>
@@ -53,8 +56,9 @@ The rootkit tested only on **Ubuntu 18.04.1 LTS - amd64** for now.<br><br>
 - Make the communaction module more flexable.<br><br>
 
 ## C&C 
-The command and control server is written in python and can communicate with several victims simultaneously.
-For now we only support http mode.
+The command and control server is written in python and can communicate with several victims simultaneously.<br>
+For now we only support http mode.<br>
+Source location: "cnc" folder.<br><br>
 
 ## Buildchain
 
