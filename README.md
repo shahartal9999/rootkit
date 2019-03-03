@@ -40,11 +40,11 @@ The rootkit tested only on **Ubuntu 18.04.1 LTS - amd64** for now.<br><br>
 ### Evidence we left
 
 **HD DATA**: In the normal mode (without persistence) <br>
+**Files**: In the current version we left 2 files: output file (result of usermode command) and the keylogger file.<br>
+**History**: hide the usermode command from history.<br>
 **Logs**: 
 - via the dmesg we can see that the sign verification leave a mark
-- For sure there more logs but we need to check it yet.<br>
-**Files**: In the current version we left 2 files: output file (result of usermode command) and the keylogger file.<br>
-**History**: hide the usermode command from history.<br><br>
+- For sure there more logs but we need to check it yet.<br><br>
 
 ### Future Features
 - Persistence mode (without deleting the runner for start).<br>
