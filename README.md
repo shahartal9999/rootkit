@@ -1,5 +1,5 @@
 # Bla-Rootkit
-The Bla-rootkit is an a advance malware wrotten in c that supposed to be installed on a server and hide himself via one of the 
+The Bla-rootkit is an a advance malware written in c that supposed to be installed on a server and hide himself via one of the 
 normal protocol of the server.
 
 
@@ -8,13 +8,13 @@ normal protocol of the server.
 <br><br>
 
 ### Modules
-Our malware have 3 parts.
+Our malware have 3 parts.<br>
 
 1. The launcher
-The usermode elf that run the malware<br><br>
+The usermode elf that run the malware<br>
 
 2. Kernel-mode client 
-Hold the main functionality and recv the commands from the c&c by Man-in-the-middle technique between the main servcie of the server and the c&c.<br><br>
+Hold the main functionality and recv the commands from the c&c by Man-in-the-middle technique between the main servcie of the server and the c&c.<br>
 
 3. Command and Control Server (Python)
 Send commands for the rootkit client.<br><br> 
@@ -32,9 +32,10 @@ LKM rootkit with high ability of network communication & host hidding.<br>
 The rootkit tested only on **Ubuntu 18.04.1 LTS - amd64** for now.<br><br>
 
 ### Current Features
-- Keylogger<br>
-- Run usermode command<br><br>
-
+- Keylogger.<br>
+- Run usermode command.<br>
+- Self hide via DKOM (Break the lkm list).<br>
+- Communcation back and forword on top a web http regular communcation.<br><br> 
 
 ### Evidence we left
 
@@ -52,9 +53,11 @@ The rootkit tested only on **Ubuntu 18.04.1 LTS - amd64** for now.<br><br>
 - Self kill.<br>
 - Make the communaction module more flexable.<br><br>
 
+## C&C 
+The command and control server is written in python and can communicate with several victims simultaneously.
+For now we only support http mode.
+
 ## Buildchain
-<br><br>
+
 ### Future Features
 - Auto stripper in the Makefile.<br><br>
-
-
