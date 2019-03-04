@@ -19,9 +19,6 @@ Hold the main functionality and recv the commands from the c&c by Man-in-the-mid
 3. Command and Control Server (Python)
 Send commands for the rootkit client.<br><br> 
 
-### Marks
-The rootkit tested only on **Ubuntu 18.04.1 LTS - amd64** for now.<br><br>
-
 ## Rootkit launcher
 Hold the binary data of the lkm client as a buffer and use init_module syscall for loading the ko to the kernel.<br>
 After the kernel module is got loaded is job is to delete himself.<br><br>
