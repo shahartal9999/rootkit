@@ -10,13 +10,13 @@ normal protocol of the server.
 ### Modules
 Our malware have 3 parts.<br>
 
-1. The launcher
+1. The launcher<br>
 The usermode elf that run the malware<br>
 
-2. Kernel-mode client 
+2. Kernel-mode client<br>
 Hold the main functionality and recv the commands from the c&c by Man-in-the-middle technique between the main servcie of the server and the c&c.<br>
 
-3. Command and Control Server (Python)
+3. Command and Control Server (Python)<br>
 Send commands for the rootkit client.<br><br> 
 
 ## Rootkit launcher
