@@ -1,4 +1,4 @@
-# Bla-Rootkit
+# HideP Rootkit
 The Bla-rootkit is an a advance malware written in c that supposed to be installed on a server and hide himself via one of the 
 normal protocol of the server.
 
