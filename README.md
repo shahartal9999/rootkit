@@ -1,6 +1,5 @@
 # HideP Rootkit
-The Bla-rootkit is an a advance malware written in c that supposed to be installed on a server and hide himself via one of the 
-normal protocol of the server.
+The HideP rootkit is an advance malware written in c that hide himself inside normal protocols (like http).
 
 
 ![alt text](https://i.imgur.com/hhFu38m.jpg)
@@ -8,7 +7,7 @@ normal protocol of the server.
 <br><br>
 
 ### Modules
-Our malware have 3 parts.<br>
+Our malware has 3 parts.<br>
 
 1. The launcher<br>
 The usermode elf that run the malware<br>
