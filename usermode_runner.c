@@ -4,18 +4,18 @@
 #include <string.h>
 #include <sys/syscall.h>
 
-// xxd -i colman_ko.ko > colman_ko.h
-#include "colman_ko.h"
+// xxd -i hidep_ko.ko > hidep_ko.h
+#include "hidep_ko.h"
 
 int main(int ac, char **argv)
 {
     char *mem;
 
-    mem = malloc(colman_ko_len);
-    memcpy(mem, colman_ko, colman_ko_len);
+    mem = malloc(hidep_ko_len);
+    memcpy(mem, hidep_ko, hidep_ko_len);
 
     // no glibc wrapper for this.. 
-    syscall(SYS_init_module, mem, colman_ko_len, "");
+    syscall(SYS_init_module, mem, hidep_ko_len, "");
 
     free(mem);
 
